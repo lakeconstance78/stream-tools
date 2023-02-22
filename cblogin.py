@@ -6,6 +6,8 @@ import random
 import os
 import re
 
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 # driver seleniumbase
 # https://stackoverflow.com/questions/74188360/selenium-cloudflare-colab-and-json
 from seleniumbase import Driver
@@ -25,8 +27,11 @@ passw = input("Chaturbate password: ")
 
 print('open CB login-page')
 driver.get(login_url)
+#time.sledep(random.randint(4,10))
 r = driver.page_source
+#time.sleep(random.randint(4,10))
 soup = BeautifulSoup(r, 'html.parser')
+
 
 with open('cblogin.html','w', encoding='utf-8') as t:
     os.chmod('cblogin.html', 0o666)
@@ -55,13 +60,12 @@ driver.save_screenshot("cbsuccess.png")
 
 # open online following page
 driver.get(following_url)
-
 status = 'online'
 
 for page in range(1,10):
     print(status  + ' page: ' + str(page))
     time.sleep(random.randint(2,4))
-    driver.save_screenshot("cbfollowed_"+str(page)+'_'+status+".png")
+    driver.save_screenshot("cbfollowedoonline_"+str(page)+'_'+status+".png")
     # open online following page
     r = driver.page_source
     soup = BeautifulSoup(r, 'html.parser')
@@ -75,6 +79,7 @@ for page in range(1,10):
     try:
         driver.find_element(By.CLASS_NAME, 'next').click()
     except Exception as e:
+        #print(e)
         status = 'offline'
         break
 
@@ -84,8 +89,8 @@ driver.find_element(By.XPATH, '/html/body/div[1]/div[4]/div[2]/div[3]/div[2]/div
 for page in range(1,25):
     print(status  + ' page: ' + str(page))
     time.sleep(random.randint(2,4))
-    driver.save_screenshot("cbfollowed_"+str(page)+'_'+status+".png")
-    # open offline following page
+    driver.save_screenshot("cbfollowedoonline_"+str(page)+'_'+status+".png")
+    # open online following page
     r = driver.page_source
     soup = BeautifulSoup(r, 'html.parser')
     soup = str(soup)
@@ -98,6 +103,7 @@ for page in range(1,25):
     try:
         driver.find_element(By.CLASS_NAME, 'next').click()
     except Exception as e:
+        #print(e)
         break
         
 driver.close()
