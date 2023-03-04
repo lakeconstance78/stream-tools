@@ -37,11 +37,13 @@ def writestreamtofile(queue):
     directory = './streamcapture/' + broadcaster_stream + '/' + str(datetime.now().strftime("%d-%m-%Y")) + '/'
     os.makedirs(directory, mode=0o777, exist_ok=True)
     filename = directory + str(datetime.now().strftime("%d-%m-%Y_%H-%M-%S")) + "_" + broadcaster_stream + '.mp4'
-    with open('broadcasters.m3u','a', encoding='utf-8') as outputfile:
-        os.chmod('broadcasters.m3u', 0o666)
-        channel = '#EXTINF:-1 group-title="chaturbate",'+ broadcaster_stream + '\n' + broadcaster_hls
-        outputfile.write(channel)
-        outputfile.write('\n')
+    
+    if str(broadcaster_stream) or str(broadcaster_hls) not in broadcasterm3ufile:
+        with open('broadcasters.m3u','a', encoding='utf-8') as outputfile:
+            os.chmod('broadcasters.m3u', 0o666)
+            channel = '#EXTINF:-1 group-title="chaturbate",'+ broadcaster_stream + '\n' + broadcaster_hls
+            outputfile.write(channel)
+            outputfile.write('\n')
     try:
         session = streamlink.Streamlink()
         #https://streamlink.github.io/cli.html#cmdoption-http-no-ssl-verify
@@ -143,15 +145,18 @@ def check_if_online(broadcaster):
             if broadcaster in already_in_queue:
                 already_in_queue.remove(broadcaster)
                 print(colored(broadcaster, 'red') + colored(' is offilne, removing from queue (ELSE)', 'cyan'))
-    except:
+    except: #Exception as e:
+        #if 'hls_source' not in e: 
+        #print(e)
         if broadcaster in already_in_queue:
             already_in_queue.remove(broadcaster)
             print(colored(broadcaster, 'red') + colored(' is offilne, removing from queue (EXCEPT)', 'cyan'))
 
 def checkwantlist():
     try:
+        start_time = datetime.now()
         while True:
-            start_time = datetime.now()
+            #start_time = datetime.now()
             print('Checking online broadcasters from wantlist.txt')
             for broadcaster in wantlist:
                 check_if_online(broadcaster)
@@ -160,6 +165,12 @@ def checkwantlist():
             time.sleep(duration/100)
     except KeyboardInterrupt:
         print('keyboard interrupt')
+        if stream:
+            stream.close()
+        if driver:
+            driver.close()
+        pool.terminate()
+        sys.exit(1)
 
 def showinfos():
     cls()
@@ -170,18 +181,25 @@ def showinfos():
 if __name__=='__main__':
     try:
         cls()
-        maxqueue = 200
+        maxqueue = 5
         stream = 0
         fd = 0
         already_in_queue = []
+        broadcasterm3ufile = []
+        broadcasterm3u = 0
         duration = 600
         queue = Queue(maxsize=maxqueue)
+        queue2 = Queue(maxsize=maxqueue)
         with open('wanted.txt', 'r') as wantlistfile:
             wantlist = wantlistfile.read().splitlines()
+        if os.path.exists('broadcasters.m3u'):
+            with open('broadcasters.m3u', 'r') as broadcasterm3ufile:
+                broadcasterm3u = broadcasterm3ufile.read().splitlines()
         checkwantlist()
     except KeyboardInterrupt:
         if stream:
             stream.close()
         if driver:
             driver.close()
+        pool.terminate()
         sys.exit(1)
