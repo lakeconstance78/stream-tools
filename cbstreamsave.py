@@ -31,6 +31,10 @@ def writestreamtofile(queue):
     filename = directory + str(datetime.now().strftime("%d-%m-%Y_%H-%M-%S")) + "_" + broadcaster_stream + '.mp4'
     filename_log = directory + str(datetime.now().strftime("%d-%m-%Y_%H-%M-%S")) + "_" + broadcaster_stream + '.log'
 
+    if os.path.exists('broadcasters.m3u'):
+            with open('broadcasters.m3u', 'r') as broadcasterm3ufile:
+                broadcasterm3u = broadcasterm3ufile.read().splitlines()
+
     if str(broadcaster_stream) or str(broadcaster_hls) not in broadcasterm3ufile:
         with open('broadcasters.m3u','a', encoding='utf-8') as outputfile:
             os.chmod('broadcasters.m3u', 0o666)
@@ -142,7 +146,8 @@ def check_if_online(broadcaster):
 def checkwantlist():
     try:
         while True:
-            print('Checking online broadcasters from wantlist.txt')
+            with open('wanted.txt', 'r') as wantlistfile:
+                wantlist = wantlistfile.read().splitlines()
             for broadcaster in wantlist:
                 check_if_online(broadcaster)
     except KeyboardInterrupt:
@@ -155,26 +160,22 @@ def checkwantlist():
         sys.exit(1)
 
 def showinfos():
-    #cls()
+    cls()
     print(str(str(datetime.now().strftime("%d-%m-%Y %H:%M:%S"))) + ' Queue [actual: '+str(len(already_in_queue)) +'/maximum: ' + str(maxqueue)+']: ' + str(already_in_queue))
+    print('Checking online broadcasters from wantlist.txt')
     if len(already_in_queue) >= maxqueue:
         print(colored('queue is full', 'red'))
 
 if __name__=='__main__':
     try:
         cls()
-        maxqueue = 200
+        maxqueue = 35
         stream = 0
         fd = 0
         already_in_queue = []
         broadcasterm3ufile = []
         broadcasterm3u = 0
         queue = Queue(maxsize=maxqueue)
-        with open('cbfollowed.txt', 'r') as wantlistfile:
-            wantlist = wantlistfile.read().splitlines()
-        if os.path.exists('broadcasters.m3u'):
-            with open('broadcasters.m3u', 'r') as broadcasterm3ufile:
-                broadcasterm3u = broadcasterm3ufile.read().splitlines()
         checkwantlist()
     except KeyboardInterrupt:
         print('KeyboardInterrupt in main')
